@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>横浜施設予約アシスタント</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="lang-switcher">
+        <button class="lang-btn" data-lang="ja">日本語</button>
+        <button class="lang-btn" data-lang="zh">中文</button>
+      </div>
+      <div class="header-icon">🏸</div>
+      <h1 data-i18n="header.title">横浜予約アシスタント</h1>
+      <p class="subtitle" data-i18n="header.subtitle">施設予約を自動化</p>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="search" data-i18n="tab.search">🔍 検索</button>
+      <button class="tab-btn" data-tab="profiles" data-i18n="tab.profiles">📋 方案</button>
+      <button class="tab-btn" data-tab="settings" data-i18n="tab.settings">⚙️ 設定</button>
+    </nav>
+
+    <!-- Search Tab -->
+    <section id="tab-search" class="tab-content active">
+      <!-- Dictionary Status -->
+      <div class="dict-status" id="dictStatus">
+        <span class="status-dot"></span>
+        <span class="status-text" data-i18n="dict.notSynced">パラメータ未取得</span>
+        <button class="btn-small" id="btnSyncDict" data-i18n="dict.syncBtn">🔄 同期</button>
+      </div>
+
+      <!-- Purpose Selection -->
+      <div class="form-group">
+        <label class="form-label" data-i18n="search.purpose">🎯 利用目的</label>
+        <div class="select-wrapper">
+          <select id="purposeSelect" class="form-select" multiple>
+            <option value="" disabled data-i18n="search.purposePlaceholder">先にパラメータを同期してください</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Area Selection -->
+      <div class="form-group">
+        <label class="form-label" data-i18n="search.area">📍 エリア（区）</label>
+        <div class="chip-container" id="areaChips">
+          <span class="chip-placeholder" data-i18n="search.areaPlaceholder">先にパラメータを同期してください</span>
+        </div>
+      </div>
+
+      <!-- Date Range -->
+      <div class="form-group">
+        <label class="form-label" data-i18n="search.dateRange">📅 日付範囲</label>
+        <div class="date-row">
+          <input type="date" id="dateFrom" class="form-input">
+          <span class="date-sep">～</span>
+          <input type="date" id="dateTo" class="form-input">
+        </div>
+      </div>
+
+      <!-- Time Range -->
+      <div class="form-group">
+        <label class="form-label" data-i18n="search.timeRange">⏰ 時間帯</label>
+        <div class="date-row">
+          <select id="timeFrom" class="form-select">
+            <option value="0900">09:00</option>
+            <option value="1000">10:00</option>
+            <option value="1100">11:00</option>
+            <option value="1200">12:00</option>
+            <option value="1300">13:00</option>
+            <option value="1400">14:00</option>
+            <option value="1500">15:00</option>
+            <option value="1600">16:00</option>
+            <option value="1700">17:00</option>
+            <option value="1800">18:00</option>
+            <option value="1900">19:00</option>
+            <option value="2000">20:00</option>
+            <option value="2100">21:00</option>
+          </select>
+          <span class="date-sep">～</span>
+          <select id="timeTo" class="form-select">
+            <option value="1100">11:00</option>
+            <option value="1200">12:00</option>
+            <option value="1300">13:00</option>
+            <option value="1400">14:00</option>
+            <option value="1500">15:00</option>
+            <option value="1600">16:00</option>
+            <option value="1700">17:00</option>
+            <option value="1800">18:00</option>
+            <option value="1900">19:00</option>
+            <option value="2000">20:00</option>
+            <option value="2100">21:00</option>
+            <option value="2200">22:00</option>
+            <option value="2300">23:00</option>
+            <option value="2400" selected>24:00</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Day of Week Filter -->
+      <div class="form-group">
+        <label class="form-label" data-i18n="search.dowFilter">📆 曜日フィルター</label>
+        <div class="dow-container">
+          <label class="dow-chip"><input type="checkbox" value="1" checked><span
+              data-i18n="search.dow.mon">月</span></label>
+          <label class="dow-chip"><input type="checkbox" value="2" checked><span
+              data-i18n="search.dow.tue">火</span></label>
+          <label class="dow-chip"><input type="checkbox" value="3" checked><span
+              data-i18n="search.dow.wed">水</span></label>
+          <label class="dow-chip"><input type="checkbox" value="4" checked><span
+              data-i18n="search.dow.thu">木</span></label>
+          <label class="dow-chip"><input type="checkbox" value="5" checked><span
+              data-i18n="search.dow.fri">金</span></label>
+          <label class="dow-chip sat"><input type="checkbox" value="6" checked><span
+              data-i18n="search.dow.sat">土</span></label>
+          <label class="dow-chip sun"><input type="checkbox" value="0" checked><span
+              data-i18n="search.dow.sun">日</span></label>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button class="btn-primary" id="btnSearch">
+          <span class="btn-icon">🚀</span>
+          <span data-i18n="btn.search">一键検索（バックグラウンド）</span>
+        </button>
+        <button class="btn-secondary" id="btnSaveProfile" data-i18n="btn.saveProfile">
+          💾 この条件を方案として保存
+        </button>
+      </div>
+    </section>
+
+    <!-- Profiles Tab -->
+    <section id="tab-profiles" class="tab-content">
+      <div class="profiles-list" id="profilesList">
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <p data-i18n="profile.empty">保存された方案はありません</p>
+          <p class="empty-hint" data-i18n="profile.emptyHint">「検索」タブで条件を設定し保存してください</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings Tab -->
+    <section id="tab-settings" class="tab-content">
+      <div class="form-group">
+        <label class="form-label" data-i18n="settings.loginId">🔑 ログインID</label>
+        <input type="text" id="loginId" class="form-input" data-i18n-placeholder="settings.loginIdPlaceholder"
+          placeholder="ユーザーID">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="settings.loginPw">🔒 パスワード</label>
+        <input type="password" id="loginPw" class="form-input" data-i18n-placeholder="settings.loginPwPlaceholder"
+          placeholder="パスワード">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="settings.interval">⏱️ 定期チェック間隔</label>
+        <select id="checkInterval" class="form-select">
+          <option value="0" data-i18n="settings.intervalOff">オフ</option>
+          <option value="15" data-i18n="settings.interval15">15分ごと</option>
+          <option value="30" data-i18n="settings.interval30">30分ごと</option>
+          <option value="60" data-i18n="settings.interval60">1時間ごと</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button class="btn-primary" id="btnSaveSettings" data-i18n="btn.saveSettings">💾 設定を保存</button>
+      </div>
+      <div class="form-group" style="margin-top: 12px;">
+        <button class="btn-secondary" id="btnSyncDictSettings" style="width: 100%;" data-i18n="btn.resyncDict">
+          🔄 パラメータ辞書を再同期
+        </button>
+        <p class="hint-text" data-i18n="btn.resyncHint">サイトから最新の施設・目的リストを取得します</p>
+      </div>
+    </section>
+
+    <!-- Status Bar -->
+    <footer class="status-bar" id="statusBar">
+      <span class="status-indicator"></span>
+      <span id="statusMessage" data-i18n="status.ready">準備完了</span>
+    </footer>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="popup.js"></script>
+</body>
+
+</html>
