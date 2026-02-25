@@ -12,10 +12,10 @@ async function init() {
   setupTabs();
   setupLangSwitcher();
   await loadDictionary();
+  updateDatePreview(); // Call updateDatePreview here
   await loadSettings();
   await loadProfiles();
   setupEventListeners();
-  setDefaultDates();
 }
 
 // ===== Language Switcher =====
@@ -42,19 +42,29 @@ function setupTabs() {
   });
 }
 
-// ===== Default Dates =====
-function setDefaultDates() {
+// ===== Date Range Preview =====
+function updateDatePreview() {
+  const val = document.getElementById('dateRangeDays').value;
   const today = new Date();
-  const dateFrom = document.getElementById('dateFrom');
-  const dateTo = document.getElementById('dateTo');
-  if (!dateFrom.value) {
-    dateFrom.value = formatDate(today);
+  const endDate = calcEndDate(today, val);
+  const preview = document.getElementById('datePreview');
+  if (preview) {
+    preview.textContent = `${formatDate(today)} ～ ${formatDate(endDate)}`;
   }
-  if (!dateTo.value) {
-    const weekLater = new Date(today);
-    weekLater.setDate(weekLater.getDate() + 7);
-    dateTo.value = formatDate(weekLater);
+}
+
+function calcEndDate(today, val) {
+  if (val === 'month') {
+    // Next month same date minus 1 day (e.g. 2/25 → 3/24)
+    const end = new Date(today);
+    end.setMonth(end.getMonth() + 1);
+    end.setDate(end.getDate() - 1);
+    return end;
   }
+  const days = parseInt(val) || 14;
+  const end = new Date(today);
+  end.setDate(end.getDate() + days);
+  return end;
 }
 
 function formatDate(d) {
@@ -62,6 +72,12 @@ function formatDate(d) {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+function resolveDateRange(val) {
+  const today = new Date();
+  const endDate = calcEndDate(today, val);
+  return { dateFrom: formatDate(today), dateTo: formatDate(endDate) };
 }
 
 // ===== Dictionary Management =====
@@ -167,6 +183,21 @@ function renderProfiles(profiles) {
       return names[d];
     }).join('・');
 
+    // Show resolved date range (computed from today + saved days/month)
+    const rangeVal = profile.dateRangeDays || '14';
+    const resolved = resolveDateRange(rangeVal);
+    const daysLabel = rangeVal === 'month'
+      ? (currentLang === 'zh' ? '1个月' : '1ヶ月')
+      : (currentLang === 'zh' ? `${rangeVal}天` : `${rangeVal}日間`);
+
+    // Holiday label
+    const holidayLabel = profile.includeHoliday
+      ? (currentLang === 'zh' ? '・假' : '・祝')
+      : '';
+
+    const isScheduled = profile.scheduledCheck || false;
+    const schedLabel = currentLang === 'zh' ? '定时检查' : '定期チェック';
+
     card.innerHTML = `
       <div class="profile-header">
         <span class="profile-name">${profile.name || `方案 ${index + 1}`}</span>
@@ -177,10 +208,17 @@ function renderProfiles(profiles) {
       </div>
       <div>${purposeLabels}${areaLabels}</div>
       <div class="profile-detail">
-        📅 ${profile.dateFrom || '?'} ～ ${profile.dateTo || '?'}
+        📅 ${daysLabel}（${resolved.dateFrom} ～ ${resolved.dateTo}）
         ⏰ ${formatTime(profile.timeFrom)} ～ ${formatTime(profile.timeTo)}
       </div>
-      <div class="profile-detail">📆 ${dowLabels || t('profile.allDays')}</div>
+      <div class="profile-detail">📆 ${dowLabels || t('profile.allDays')}${holidayLabel}</div>
+      <div class="profile-schedule">
+        <label class="schedule-toggle" title="${schedLabel}">
+          <input type="checkbox" data-action="schedule" data-index="${index}" ${isScheduled ? 'checked' : ''}>
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">⏱️ ${schedLabel}</span>
+        </label>
+      </div>
     `;
     container.appendChild(card);
   });
@@ -192,6 +230,22 @@ function renderProfiles(profiles) {
   container.querySelectorAll('[data-action="delete"]').forEach(btn => {
     btn.addEventListener('click', () => deleteProfile(parseInt(btn.dataset.index)));
   });
+  container.querySelectorAll('[data-action="schedule"]').forEach(cb => {
+    cb.addEventListener('change', () => toggleScheduledCheck(parseInt(cb.dataset.index), cb.checked));
+  });
+}
+
+async function toggleScheduledCheck(index, enabled) {
+  const data = await chrome.storage.local.get('profiles');
+  const profiles = data.profiles || [];
+  if (profiles[index]) {
+    profiles[index].scheduledCheck = enabled;
+    await chrome.storage.local.set({ profiles });
+    const label = enabled
+      ? (currentLang === 'zh' ? '✓ 已启用定时检查' : '✓ 定期チェックを有効にしました')
+      : (currentLang === 'zh' ? '定时检查已关闭' : '定期チェックを無効にしました');
+    setStatus(label, 'success');
+  }
 }
 
 function formatTime(val) {
@@ -243,9 +297,13 @@ async function runProfile(index) {
     return;
   }
 
-  console.log('[Popup] Running profile:', profile.name, profile);
+  // Resolve relative days to actual dates at run time
+  const resolved = resolveDateRange(profile.dateRangeDays || '14');
+  const runParams = { ...profile, dateFrom: resolved.dateFrom, dateTo: resolved.dateTo };
+
+  console.log('[Popup] Running profile:', profile.name, runParams);
   setStatus(t('status.searching'), 'busy');
-  chrome.runtime.sendMessage({ action: 'startSearch', params: profile });
+  chrome.runtime.sendMessage({ action: 'startSearch', params: runParams });
 }
 
 // ===== Gather Search Params =====
@@ -261,16 +319,20 @@ function gatherCurrentSearchParams() {
     label: cb.parentElement.querySelector('span').textContent
   }));
 
-  const daysOfWeek = Array.from(document.querySelectorAll('.dow-chip input:checked')).map(cb => parseInt(cb.value));
+  const checkedValues = Array.from(document.querySelectorAll('.dow-chip input:checked')).map(cb => cb.value);
+  const daysOfWeek = checkedValues.filter(v => v !== 'holiday').map(v => parseInt(v));
+  const includeHoliday = checkedValues.includes('holiday');
+
+  const dateRangeDays = document.getElementById('dateRangeDays').value || '14';
 
   return {
     purposes: selectedPurposes,
     areas: selectedAreas,
-    dateFrom: document.getElementById('dateFrom').value,
-    dateTo: document.getElementById('dateTo').value,
+    dateRangeDays: dateRangeDays,
     timeFrom: document.getElementById('timeFrom').value,
     timeTo: document.getElementById('timeTo').value,
-    daysOfWeek: daysOfWeek
+    daysOfWeek: daysOfWeek,
+    includeHoliday: includeHoliday
   };
 }
 
@@ -289,6 +351,9 @@ function setupEventListeners() {
 
   // Save settings
   document.getElementById('btnSaveSettings').addEventListener('click', saveSettings);
+
+  // Date range days change → update preview
+  document.getElementById('dateRangeDays').addEventListener('change', updateDatePreview);
 
   // Listen for messages from background
   chrome.runtime.onMessage.addListener((msg) => {
@@ -353,7 +418,12 @@ async function startSearch() {
     setStatus(t('status.searchStart'), 'busy');
   }
 
-  chrome.runtime.sendMessage({ action: 'startSearch', params });
+  // Resolve relative days to actual dates at search time
+  const days = params.dateRangeDays || '14';
+  const resolved = resolveDateRange(days);
+  const searchParams = { ...params, dateFrom: resolved.dateFrom, dateTo: resolved.dateTo };
+
+  chrome.runtime.sendMessage({ action: 'startSearch', params: searchParams });
 }
 
 // ===== Status Bar =====

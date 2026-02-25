@@ -301,6 +301,23 @@ body::-webkit-scrollbar-thumb {
   font-size: 14px;
 }
 
+/* ===== Date Range Selector ===== */
+.date-range-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.date-preview {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  background: rgba(99, 102, 241, 0.08);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--accent);
+  letter-spacing: 0.3px;
+}
+
 /* ===== Area Chips ===== */
 .chip-container {
   display: flex;
@@ -410,6 +427,16 @@ body::-webkit-scrollbar-thumb {
 .dow-chip.sun input:checked+span {
   background: var(--accent);
   color: white;
+}
+
+.dow-chip.holiday span {
+  color: #f59e0b;
+}
+
+.dow-chip.holiday input:checked+span {
+  background: #f59e0b;
+  color: white;
+  border-color: #f59e0b;
 }
 
 /* ===== Action Buttons ===== */
@@ -538,6 +565,68 @@ body::-webkit-scrollbar-thumb {
   font-size: 11px;
   color: var(--text-muted);
   margin-top: 4px;
+}
+
+/* ===== Schedule Toggle ===== */
+.profile-schedule {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.schedule-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.schedule-toggle input {
+  display: none;
+}
+
+.toggle-slider {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.schedule-toggle input:checked+.toggle-slider {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.schedule-toggle input:checked+.toggle-slider::after {
+  left: 16px;
+  background: white;
+}
+
+.toggle-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+
+.schedule-toggle input:checked~.toggle-label {
+  color: var(--success);
 }
 
 /* ===== Empty State ===== */

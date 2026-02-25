@@ -24,7 +24,11 @@ const I18N = {
     'search.purposePlaceholder': '请先同步参数',
     'search.area': '📍 区域',
     'search.areaPlaceholder': '请先同步参数',
-    'search.dateRange': '📅 日期范围',
+    'search.dateRange': '📅 搜索期间',
+    'search.days7': '从今天起7天',
+    'search.days14': '从今天起14天',
+    'search.days21': '从今天起21天',
+    'search.daysMonth': '从今天起1个月',
     'search.timeRange': '⏰ 时间段',
     'search.dowFilter': '📆 星期筛选',
     'search.dow.mon': '一',
@@ -34,6 +38,7 @@ const I18N = {
     'search.dow.fri': '五',
     'search.dow.sat': '六',
     'search.dow.sun': '日',
+    'search.dow.holiday': '假',
 
     // Action buttons
     'btn.search': '🚀 一键搜索（后台运行）',
@@ -99,7 +104,11 @@ const I18N = {
     'search.purposePlaceholder': '先にパラメータを同期してください',
     'search.area': '📍 エリア（区）',
     'search.areaPlaceholder': '先にパラメータを同期してください',
-    'search.dateRange': '📅 日付範囲',
+    'search.dateRange': '📅 検索期間',
+    'search.days7': '今日から7日間',
+    'search.days14': '今日から14日間',
+    'search.days21': '今日から21日間',
+    'search.daysMonth': '今日から1ヶ月',
     'search.timeRange': '⏰ 時間帯',
     'search.dowFilter': '📆 曜日フィルター',
     'search.dow.mon': '月',
@@ -109,6 +118,7 @@ const I18N = {
     'search.dow.fri': '金',
     'search.dow.sat': '土',
     'search.dow.sun': '日',
+    'search.dow.holiday': '祝',
 
     // Action buttons
     'btn.search': '🚀 一键検索（バックグラウンド）',

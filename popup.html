@@ -55,13 +55,17 @@
         </div>
       </div>
 
-      <!-- Date Range -->
+      <!-- Date Range (Relative Days) -->
       <div class="form-group">
-        <label class="form-label" data-i18n="search.dateRange">📅 日付範囲</label>
-        <div class="date-row">
-          <input type="date" id="dateFrom" class="form-input">
-          <span class="date-sep">～</span>
-          <input type="date" id="dateTo" class="form-input">
+        <label class="form-label" data-i18n="search.dateRange">📅 検索期間</label>
+        <div class="date-range-selector">
+          <select id="dateRangeDays" class="form-select">
+            <option value="7" data-i18n="search.days7">今日から7日間</option>
+            <option value="14" selected data-i18n="search.days14">今日から14日間</option>
+            <option value="21" data-i18n="search.days21">今日から21日間</option>
+            <option value="month" data-i18n="search.daysMonth">今日から1ヶ月</option>
+          </select>
+          <div class="date-preview" id="datePreview"></div>
         </div>
       </div>
 
@@ -122,6 +126,8 @@
               data-i18n="search.dow.sat">土</span></label>
           <label class="dow-chip sun"><input type="checkbox" value="0" checked><span
               data-i18n="search.dow.sun">日</span></label>
+          <label class="dow-chip holiday"><input type="checkbox" value="holiday" checked><span
+              data-i18n="search.dow.holiday">祝</span></label>
         </div>
       </div>
 

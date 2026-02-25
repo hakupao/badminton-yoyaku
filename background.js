@@ -72,15 +72,55 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
 });
 
+// ===== Helper: resolve relative days to actual dates =====
+function resolveDateRangeBg(val) {
+    const today = new Date();
+    let endDate;
+    if (val === 'month') {
+        // Next month same date minus 1 day (e.g. 2/25 → 3/24)
+        endDate = new Date(today);
+        endDate.setMonth(endDate.getMonth() + 1);
+        endDate.setDate(endDate.getDate() - 1);
+    } else {
+        const days = parseInt(val) || 14;
+        endDate = new Date(today);
+        endDate.setDate(endDate.getDate() + days);
+    }
+    const fmt = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    };
+    return { dateFrom: fmt(today), dateTo: fmt(endDate) };
+}
+
 // ===== Alarm for periodic checks =====
 chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === ALARM_NAME) {
         console.log('[BG] Alarm triggered, running periodic check');
         const data = await chrome.storage.local.get('profiles');
         const profiles = data.profiles || [];
-        if (profiles.length > 0) {
-            // Run the first profile by default, mark as alarm-triggered
-            handleStartSearch(profiles[0], true);
+
+        // Filter profiles with scheduledCheck enabled
+        const scheduledProfiles = profiles.filter(p => p.scheduledCheck === true);
+
+        if (scheduledProfiles.length === 0) {
+            console.log('[BG] No profiles with scheduled check enabled, skipping');
+            return;
+        }
+
+        console.log(`[BG] Running ${scheduledProfiles.length} scheduled profile(s)`);
+
+        // Run each scheduled profile sequentially
+        for (const profile of scheduledProfiles) {
+            const resolved = resolveDateRangeBg(profile.dateRangeDays || '14');
+            const params = { ...profile, dateFrom: resolved.dateFrom, dateTo: resolved.dateTo };
+            await handleStartSearch(params, true);
+            // Wait between profiles to avoid overlapping searches
+            if (scheduledProfiles.length > 1) {
+                await new Promise(r => setTimeout(r, 60000)); // 1 min between each
+            }
         }
     }
 });

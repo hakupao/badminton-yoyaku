@@ -284,7 +284,62 @@ async function stepHomePage(task) {
         }
     }
 
-    // Step 7: Select search target: 空きコマ (available slots)
+    // Step 7: Select days of week (利用曜日)
+    const dayMap = { 0: '日曜日', 1: '月曜日', 2: '火曜日', 3: '水曜日', 4: '木曜日', 5: '金曜日', 6: '土曜日' };
+    const dowCheckboxes = document.querySelectorAll(
+        'input[type="checkbox"][name*="DayOfWeek"], input[type="checkbox"][name*="dayofweek"], input[type="checkbox"][name*="Dayofweek"]'
+    );
+
+    if (dowCheckboxes.length > 0 && params.daysOfWeek) {
+        // First uncheck all day-of-week checkboxes
+        for (const cb of dowCheckboxes) {
+            if (cb.checked) {
+                const label = cb.closest('label');
+                if (label) { label.click(); } else { cb.click(); }
+                triggerChange(cb);
+                await sleep(200);
+            }
+        }
+
+        // Then check only the selected days
+        for (const dayNum of params.daysOfWeek) {
+            const dayName = dayMap[dayNum];
+            if (!dayName) continue;
+            for (const cb of dowCheckboxes) {
+                const label = cb.closest('label') || cb.parentElement;
+                const text = label?.textContent?.trim() || '';
+                if (text.includes(dayName) && !cb.checked) {
+                    const lbl = cb.closest('label');
+                    if (lbl) { lbl.click(); } else { cb.click(); }
+                    triggerChange(cb);
+                    await sleep(200);
+                    console.log(`[CS] ✓ Selected day: ${dayName}`);
+                    break;
+                }
+            }
+        }
+
+        // Handle holiday (祝日)
+        if (params.includeHoliday) {
+            for (const cb of dowCheckboxes) {
+                const label = cb.closest('label') || cb.parentElement;
+                const text = label?.textContent?.trim() || '';
+                if (text.includes('祝日') && !cb.checked) {
+                    const lbl = cb.closest('label');
+                    if (lbl) { lbl.click(); } else { cb.click(); }
+                    triggerChange(cb);
+                    await sleep(200);
+                    console.log('[CS] ✓ Selected holiday (祝日)');
+                    break;
+                }
+            }
+        }
+        console.log(`[CS] Day-of-week selection complete`);
+    } else {
+        console.log('[CS] No day-of-week checkboxes found or no day filter specified, skipping');
+    }
+
+    // Step 8: Select search target: 空きコマ (available slots)
     const radioButtons = document.querySelectorAll('input[type="radio"]');
     for (const radio of radioButtons) {
         const label = radio.closest('label') || radio.parentElement;
