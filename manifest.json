@@ -5,7 +5,6 @@
   "description": "横浜市の市民利用施設予約システムでの検索・予約を自動化するアシスタント",
   "permissions": [
     "storage",
-    "tabs",
     "scripting",
     "alarms",
     "notifications"
