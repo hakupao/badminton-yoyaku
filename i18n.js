@@ -43,6 +43,8 @@ const I18N = {
     // Action buttons
     'btn.search': '🚀 一键搜索（后台运行）',
     'btn.saveProfile': '💾 保存为方案',
+    'btn.updateProfile': '💾 更新方案',
+    'btn.cancelProfileEdit': '↩ 取消编辑',
     'btn.saveSettings': '💾 保存设置',
     'btn.resyncDict': '🔄 重新同步参数字典',
     'btn.resyncHint': '从网站获取最新的场馆和活动类型列表',
@@ -51,7 +53,8 @@ const I18N = {
     'profile.empty': '暂无已保存的方案',
     'profile.emptyHint': '请在「搜索」页设置条件并保存',
     'profile.promptName': '请输入方案名称:',
-    'profile.saved': '方案已保存 ✓',
+    'profile.savedNamed': '方案「{name}」已保存 ✓',
+    'profile.updated': '方案已更新 ✓',
     'profile.deleted': '方案已删除',
     'profile.allDays': '全部',
 
@@ -74,13 +77,12 @@ const I18N = {
     'status.syncDone': '✓ 参数字典已更新',
     'status.syncFail': '⚠️ 获取失败，请重试',
     'status.noPurpose': '⚠️ 请选择活动类型',
+    'status.editingProfile': '🛠️ 正在编辑方案「{name}」',
+    'status.editCanceled': '已取消方案编辑',
     'status.searchStart': '🔄 开始后台搜索...',
     'status.found': '✓ 找到 {count} 个空位！',
     'status.notFound': '搜索完成 - 未找到空位',
 
-    // Notifications
-    'notify.title': '🎉 找到空位了！',
-    'notify.body': '在 {facilities} 个场馆找到 {slots} 个空位',
   },
 
   ja: {
@@ -123,6 +125,8 @@ const I18N = {
     // Action buttons
     'btn.search': '🚀 一键検索（バックグラウンド）',
     'btn.saveProfile': '💾 この条件を方案として保存',
+    'btn.updateProfile': '💾 方案を更新',
+    'btn.cancelProfileEdit': '↩ 編集をキャンセル',
     'btn.saveSettings': '💾 設定を保存',
     'btn.resyncDict': '🔄 パラメータ辞書を再同期',
     'btn.resyncHint': 'サイトから最新の施設・目的リストを取得します',
@@ -131,7 +135,8 @@ const I18N = {
     'profile.empty': '保存された方案はありません',
     'profile.emptyHint': '「検索」タブで条件を設定し保存してください',
     'profile.promptName': '方案名を入力してください:',
-    'profile.saved': '方案を保存しました ✓',
+    'profile.savedNamed': '方案「{name}」を保存しました ✓',
+    'profile.updated': '方案を更新しました ✓',
     'profile.deleted': '方案を削除しました',
     'profile.allDays': '全曜日',
 
@@ -154,13 +159,12 @@ const I18N = {
     'status.syncDone': '✓ パラメータ辞書を更新しました',
     'status.syncFail': '⚠️ データが取得できませんでした。再試行してください。',
     'status.noPurpose': '⚠️ 利用目的を選択してください',
+    'status.editingProfile': '🛠️ 方案「{name}」を編集中',
+    'status.editCanceled': '方案の編集をキャンセルしました',
     'status.searchStart': '🔄 バックグラウンドで検索を開始...',
     'status.found': '✓ {count}件の空きが見つかりました！',
     'status.notFound': '検索完了 - 空きは見つかりませんでした',
 
-    // Notifications
-    'notify.title': '🎉 空きが見つかりました！',
-    'notify.body': '{facilities}施設で{slots}件の空きコマが見つかりました',
   }
 };
 

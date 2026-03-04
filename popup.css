@@ -22,7 +22,6 @@
   --border: rgba(255, 255, 255, 0.08);
   --radius: 10px;
   --radius-sm: 6px;
-  --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
   --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -532,6 +531,11 @@ body::-webkit-scrollbar-thumb {
   box-shadow: 0 2px 12px rgba(99, 102, 241, 0.1);
 }
 
+.profile-card.editing {
+  border-color: var(--warning);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.55);
+}
+
 .profile-header {
   display: flex;
   justify-content: space-between;
@@ -725,15 +729,4 @@ body::-webkit-scrollbar-thumb {
   50% {
     opacity: 0.4;
   }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.spinning {
-  display: inline-block;
-  animation: spin 1s linear infinite;
 }

@@ -4,6 +4,8 @@
 
 document.addEventListener('DOMContentLoaded', init);
 
+let editingProfileIndex = null;
+
 async function init() {
   // Load language first so UI renders in the correct language
   await loadLang();
@@ -12,10 +14,12 @@ async function init() {
   setupTabs();
   setupLangSwitcher();
   await loadDictionary();
-  updateDatePreview(); // Call updateDatePreview here
+  await loadLastSearchParams();
+  updateDatePreview();
   await loadSettings();
   await loadProfiles();
   setupEventListeners();
+  refreshProfileEditUi();
 }
 
 // ===== Language Switcher =====
@@ -26,6 +30,7 @@ function setupLangSwitcher() {
       // Re-render dynamic content that isn't covered by data-i18n
       await loadDictionary();
       await loadProfiles();
+      refreshProfileEditUi();
     });
   });
 }
@@ -33,13 +38,19 @@ function setupLangSwitcher() {
 // ===== Tab Navigation =====
 function setupTabs() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
-    });
+    btn.addEventListener('click', () => activateTab(btn.dataset.tab));
   });
+}
+
+function activateTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+  const tabBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+  const tabContent = document.getElementById(`tab-${tabName}`);
+
+  if (tabBtn) tabBtn.classList.add('active');
+  if (tabContent) tabContent.classList.add('active');
 }
 
 // ===== Date Range Preview =====
@@ -61,7 +72,7 @@ function calcEndDate(today, val) {
     end.setDate(end.getDate() - 1);
     return end;
   }
-  const days = parseInt(val) || 14;
+  const days = parseInt(val, 10) || 14;
   const end = new Date(today);
   end.setDate(end.getDate() + days);
   return end;
@@ -80,11 +91,121 @@ function resolveDateRange(val) {
   return { dateFrom: formatDate(today), dateTo: formatDate(endDate) };
 }
 
+function extractValueList(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map(item => {
+      if (item && typeof item === 'object' && item.value !== undefined && item.value !== null) {
+        return String(item.value);
+      }
+      if (item !== undefined && item !== null) return String(item);
+      return '';
+    })
+    .filter(Boolean);
+}
+
+function setSelectValueIfExists(id, value) {
+  if (value === undefined || value === null || value === '') return;
+  const select = document.getElementById(id);
+  if (!select) return;
+
+  const target = String(value);
+  const hasOption = Array.from(select.options).some(opt => opt.value === target);
+  if (hasOption) select.value = target;
+}
+
+function applySearchParamsToForm(params) {
+  if (!params || typeof params !== 'object') return;
+
+  if (Array.isArray(params.purposes)) {
+    const purposeValues = new Set(extractValueList(params.purposes));
+    const purposeSelect = document.getElementById('purposeSelect');
+    if (purposeSelect) {
+      Array.from(purposeSelect.options).forEach(opt => {
+        opt.selected = purposeValues.has(opt.value);
+      });
+    }
+  }
+
+  if (Array.isArray(params.areas)) {
+    const areaValues = new Set(extractValueList(params.areas));
+    document.querySelectorAll('#areaChips input[type="checkbox"]').forEach(cb => {
+      cb.checked = areaValues.has(cb.value);
+    });
+  }
+
+  setSelectValueIfExists('dateRangeDays', params.dateRangeDays);
+  setSelectValueIfExists('timeFrom', params.timeFrom);
+  setSelectValueIfExists('timeTo', params.timeTo);
+
+  const hasDowConfig = Array.isArray(params.daysOfWeek) || typeof params.includeHoliday === 'boolean';
+  if (hasDowConfig) {
+    const dayValues = new Set((params.daysOfWeek || []).map(v => String(v)));
+    document.querySelectorAll('.dow-chip input').forEach(cb => {
+      if (cb.value === 'holiday') {
+        cb.checked = !!params.includeHoliday;
+      } else {
+        cb.checked = dayValues.has(cb.value);
+      }
+    });
+  }
+
+  updateDatePreview();
+}
+
+function buildRememberedSearchParams(params) {
+  const daysOfWeek = Array.isArray(params.daysOfWeek)
+    ? params.daysOfWeek
+      .map(v => Number(v))
+      .filter(v => Number.isInteger(v) && v >= 0 && v <= 6)
+    : [];
+
+  return {
+    purposes: Array.isArray(params.purposes) ? params.purposes : [],
+    areas: Array.isArray(params.areas) ? params.areas : [],
+    dateRangeDays: params.dateRangeDays || '14',
+    timeFrom: params.timeFrom || '0900',
+    timeTo: params.timeTo || '2400',
+    daysOfWeek,
+    includeHoliday: !!params.includeHoliday
+  };
+}
+
+async function loadLastSearchParams() {
+  const data = await chrome.storage.local.get('lastSearchParams');
+  if (data.lastSearchParams) {
+    applySearchParamsToForm(data.lastSearchParams);
+  }
+}
+
+async function saveLastSearchParams(params) {
+  await chrome.storage.local.set({ lastSearchParams: buildRememberedSearchParams(params) });
+}
+
+function getProfileDisplayName(profile, index) {
+  return profile?.name || `方案 ${index + 1}`;
+}
+
+function refreshProfileEditUi() {
+  const saveBtn = document.getElementById('btnSaveProfile');
+  const cancelBtn = document.getElementById('btnCancelProfileEdit');
+  if (!saveBtn || !cancelBtn) return;
+
+  if (editingProfileIndex === null) {
+    saveBtn.textContent = t('btn.saveProfile');
+    cancelBtn.style.display = 'none';
+  } else {
+    saveBtn.textContent = t('btn.updateProfile');
+    cancelBtn.style.display = 'block';
+  }
+}
+
 // ===== Dictionary Management =====
 async function loadDictionary() {
   const data = await chrome.storage.local.get(['dictionary', 'dictLastSync']);
   const dict = data.dictionary;
   const statusEl = document.getElementById('dictStatus');
+  const preservedParams = gatherCurrentSearchParams();
 
   if (dict && dict.purposes && dict.purposes.length > 0) {
     statusEl.classList.add('synced');
@@ -92,6 +213,7 @@ async function loadDictionary() {
     statusEl.querySelector('.status-text').textContent = `${t('dict.synced')} (${syncTime})`;
     populatePurposes(dict.purposes);
     populateAreas(dict.areas);
+    applySearchParamsToForm(preservedParams);
   } else {
     statusEl.classList.remove('synced');
     statusEl.querySelector('.status-text').textContent = t('dict.notSynced');
@@ -172,7 +294,7 @@ function renderProfiles(profiles) {
   container.innerHTML = '';
   profiles.forEach((profile, index) => {
     const card = document.createElement('div');
-    card.className = 'profile-card';
+    card.className = `profile-card${editingProfileIndex === index ? ' editing' : ''}`;
 
     const purposeLabels = (profile.purposes || []).map(p => `<span class="profile-tag">${p.label}</span>`).join('');
     const areaLabels = (profile.areas || []).map(a => `<span class="profile-tag">📍${a.label}</span>`).join('');
@@ -200,8 +322,9 @@ function renderProfiles(profiles) {
 
     card.innerHTML = `
       <div class="profile-header">
-        <span class="profile-name">${profile.name || `方案 ${index + 1}`}</span>
+        <span class="profile-name">${getProfileDisplayName(profile, index)}</span>
         <div class="profile-actions">
+          <button class="btn-small" data-action="edit" data-index="${index}" title="${currentLang === 'zh' ? '编辑此方案' : 'この方案を編集'}" style="background:var(--warning);">✎</button>
           <button class="btn-small" data-action="run" data-index="${index}" title="${currentLang === 'zh' ? '运行此方案' : 'この方案で検索'}">▶</button>
           <button class="btn-small" data-action="delete" data-index="${index}" title="${currentLang === 'zh' ? '删除' : '削除'}" style="background:var(--danger);">✕</button>
         </div>
@@ -224,14 +347,17 @@ function renderProfiles(profiles) {
   });
 
   // Bind profile action buttons
+  container.querySelectorAll('[data-action="edit"]').forEach(btn => {
+    btn.addEventListener('click', () => startEditProfile(parseInt(btn.dataset.index, 10)));
+  });
   container.querySelectorAll('[data-action="run"]').forEach(btn => {
-    btn.addEventListener('click', () => runProfile(parseInt(btn.dataset.index)));
+    btn.addEventListener('click', () => runProfile(parseInt(btn.dataset.index, 10)));
   });
   container.querySelectorAll('[data-action="delete"]').forEach(btn => {
-    btn.addEventListener('click', () => deleteProfile(parseInt(btn.dataset.index)));
+    btn.addEventListener('click', () => deleteProfile(parseInt(btn.dataset.index, 10)));
   });
   container.querySelectorAll('[data-action="schedule"]').forEach(cb => {
-    cb.addEventListener('change', () => toggleScheduledCheck(parseInt(cb.dataset.index), cb.checked));
+    cb.addEventListener('change', () => toggleScheduledCheck(parseInt(cb.dataset.index, 10), cb.checked));
   });
 }
 
@@ -253,6 +379,32 @@ function formatTime(val) {
   return val.substring(0, 2) + ':' + val.substring(2);
 }
 
+async function startEditProfile(index) {
+  const data = await chrome.storage.local.get('profiles');
+  const profiles = data.profiles || [];
+  const profile = profiles[index];
+  if (!profile) return;
+
+  editingProfileIndex = index;
+  applySearchParamsToForm(profile);
+  refreshProfileEditUi();
+  renderProfiles(profiles);
+  activateTab('search');
+  setStatus(t('status.editingProfile', { name: getProfileDisplayName(profile, index) }), 'busy');
+}
+
+function cancelProfileEdit(showStatus = true) {
+  if (editingProfileIndex === null) return;
+
+  editingProfileIndex = null;
+  refreshProfileEditUi();
+  loadProfiles();
+
+  if (showStatus) {
+    setStatus(t('status.editCanceled'), 'success');
+  }
+}
+
 async function saveCurrentAsProfile() {
   const profile = gatherCurrentSearchParams();
   if (!profile.purposes || profile.purposes.length === 0) {
@@ -260,24 +412,56 @@ async function saveCurrentAsProfile() {
     return;
   }
 
+  const data = await chrome.storage.local.get('profiles');
+  const profiles = data.profiles || [];
+
+  if (editingProfileIndex !== null) {
+    const index = editingProfileIndex;
+    const original = profiles[index];
+
+    if (original) {
+      profile.name = getProfileDisplayName(original, index);
+      profile.scheduledCheck = !!original.scheduledCheck;
+      profiles[index] = profile;
+      await chrome.storage.local.set({ profiles });
+
+      editingProfileIndex = null;
+      refreshProfileEditUi();
+      renderProfiles(profiles);
+      setStatus(t('profile.updated'), 'success');
+      return;
+    }
+
+    editingProfileIndex = null;
+    refreshProfileEditUi();
+  }
+
   const name = prompt(t('profile.promptName'), `方案 ${Date.now()}`);
   if (!name) return;
   profile.name = name;
 
-  const data = await chrome.storage.local.get('profiles');
-  const profiles = data.profiles || [];
   profiles.push(profile);
   await chrome.storage.local.set({ profiles });
 
   renderProfiles(profiles);
-  setStatus(t('profile.saved').replace('方案', `「${name}」`), 'success');
+  setStatus(t('profile.savedNamed', { name }), 'success');
 }
 
 async function deleteProfile(index) {
   const data = await chrome.storage.local.get('profiles');
   const profiles = data.profiles || [];
+  if (!profiles[index]) return;
+
   profiles.splice(index, 1);
   await chrome.storage.local.set({ profiles });
+
+  if (editingProfileIndex === index) {
+    editingProfileIndex = null;
+    refreshProfileEditUi();
+  } else if (editingProfileIndex !== null && index < editingProfileIndex) {
+    editingProfileIndex -= 1;
+  }
+
   renderProfiles(profiles);
   setStatus(t('profile.deleted'), 'success');
 }
@@ -320,7 +504,7 @@ function gatherCurrentSearchParams() {
   }));
 
   const checkedValues = Array.from(document.querySelectorAll('.dow-chip input:checked')).map(cb => cb.value);
-  const daysOfWeek = checkedValues.filter(v => v !== 'holiday').map(v => parseInt(v));
+  const daysOfWeek = checkedValues.filter(v => v !== 'holiday').map(v => parseInt(v, 10));
   const includeHoliday = checkedValues.includes('holiday');
 
   const dateRangeDays = document.getElementById('dateRangeDays').value || '14';
@@ -348,6 +532,10 @@ function setupEventListeners() {
 
   // Save profile
   document.getElementById('btnSaveProfile').addEventListener('click', saveCurrentAsProfile);
+  const btnCancelProfileEdit = document.getElementById('btnCancelProfileEdit');
+  if (btnCancelProfileEdit) {
+    btnCancelProfileEdit.addEventListener('click', () => cancelProfileEdit(true));
+  }
 
   // Save settings
   document.getElementById('btnSaveSettings').addEventListener('click', saveSettings);
@@ -423,6 +611,7 @@ async function startSearch() {
   const resolved = resolveDateRange(days);
   const searchParams = { ...params, dateFrom: resolved.dateFrom, dateTo: resolved.dateTo };
 
+  await saveLastSearchParams(params);
   chrome.runtime.sendMessage({ action: 'startSearch', params: searchParams });
 }
 

@@ -40,7 +40,7 @@
       <!-- Purpose Selection -->
       <div class="form-group">
         <label class="form-label" data-i18n="search.purpose">🎯 利用目的</label>
-        <div class="select-wrapper">
+        <div>
           <select id="purposeSelect" class="form-select" multiple>
             <option value="" disabled data-i18n="search.purposePlaceholder">先にパラメータを同期してください</option>
           </select>
@@ -134,11 +134,14 @@
       <!-- Action Buttons -->
       <div class="actions">
         <button class="btn-primary" id="btnSearch">
-          <span class="btn-icon">🚀</span>
+          <span>🚀</span>
           <span data-i18n="btn.search">一键検索（バックグラウンド）</span>
         </button>
         <button class="btn-secondary" id="btnSaveProfile" data-i18n="btn.saveProfile">
           💾 この条件を方案として保存
+        </button>
+        <button class="btn-secondary" id="btnCancelProfileEdit" data-i18n="btn.cancelProfileEdit" style="display:none;">
+          ↩ 編集をキャンセル
         </button>
       </div>
     </section>

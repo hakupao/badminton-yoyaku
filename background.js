@@ -45,7 +45,7 @@ async function bgT(key, params) {
 }
 
 // ===== Message Handler =====
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, sender) => {
     switch (msg.action) {
         case 'syncDictionary':
             handleSyncDictionary();
@@ -68,8 +68,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         case 'availabilityResults':
             handleAvailabilityResults(msg.results, sender.tab?.id);
             break;
+        default:
+            break;
     }
-    return true;
 });
 
 // ===== Helper: resolve relative days to actual dates =====
@@ -82,7 +83,7 @@ function resolveDateRangeBg(val) {
         endDate.setMonth(endDate.getMonth() + 1);
         endDate.setDate(endDate.getDate() - 1);
     } else {
-        const days = parseInt(val) || 14;
+        const days = parseInt(val, 10) || 14;
         endDate = new Date(today);
         endDate.setDate(endDate.getDate() + days);
     }
@@ -289,7 +290,7 @@ async function handleStartSearch(params, triggeredByAlarm = false) {
     }
 }
 
-function handleSearchStepComplete(msg, tabId) {
+function handleSearchStepComplete(msg) {
     console.log(`[BG] Search step complete: ${msg.step}`, msg);
     broadcastStatus(`🔄 ${msg.statusText || msg.step}`, 'busy');
 }
@@ -301,7 +302,8 @@ async function handleAvailabilityResults(results, tabId) {
     const taskData = await chrome.storage.local.get('currentTask');
     const isAlarmTriggered = taskData.currentTask?.triggeredByAlarm === true;
 
-    const availableSlots = results.filter(r => r.available && r.available.length > 0);
+    const safeResults = Array.isArray(results) ? results : [];
+    const availableSlots = safeResults.filter(r => r.available && r.available.length > 0);
 
     if (availableSlots.length > 0) {
         // Found available slots! Notify user
