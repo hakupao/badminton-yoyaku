@@ -10,6 +10,7 @@ async function init() {
   // Load language first so UI renders in the correct language
   await loadLang();
   applyI18n();
+  renderVersionText();
 
   setupTabs();
   setupLangSwitcher();
@@ -27,12 +28,22 @@ function setupLangSwitcher() {
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       await setLang(btn.dataset.lang);
+      renderVersionText();
       // Re-render dynamic content that isn't covered by data-i18n
       await loadDictionary();
       await loadProfiles();
       refreshProfileEditUi();
     });
   });
+}
+
+function renderVersionText() {
+  const el = document.getElementById('versionText');
+  if (!el) return;
+
+  const version = chrome.runtime.getManifest()?.version || '0.0.0';
+  const label = currentLang === 'zh' ? '版本' : 'バージョン';
+  el.textContent = `${label} v${version}`;
 }
 
 // ===== Tab Navigation =====

@@ -133,6 +133,13 @@ body::-webkit-scrollbar-thumb {
   margin-top: 2px;
 }
 
+.version-text {
+  font-size: 10px;
+  color: rgba(224, 231, 255, 0.75);
+  margin-top: 4px;
+  letter-spacing: 0.35px;
+}
+
 /* ===== Tab Navigation ===== */
 .tab-nav {
   display: flex;

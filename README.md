@@ -76,7 +76,6 @@ Badminton-YoYaku/
 ## 权限说明
 
 - `storage`：保存本地设置、方案、字典、最近搜索条件。
-- `tabs`：创建/更新/关闭自动化标签页。
 - `scripting`：在目标站点注入采集脚本（字典同步）。
 - `alarms`：执行定时检查。
 - `notifications`：推送空位通知。

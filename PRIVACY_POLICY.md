@@ -34,7 +34,6 @@
 ## 4. 权限用途说明
 
 - `storage`：保存本地配置与缓存
-- `tabs`：创建和管理自动化标签页
 - `scripting`：在目标页面执行采集脚本
 - `alarms`：执行定时任务
 - `notifications`：发送空位提醒
