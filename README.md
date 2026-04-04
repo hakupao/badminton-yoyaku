@@ -56,28 +56,28 @@ I'm **Bojiang**, a badminton enthusiast in Yokohama, Japan. Organizing group bad
 
 ```mermaid
 graph TB
-    subgraph Browser["🌐 Browser Environment"]
-        UI["🎨 Popup UI"]
-        Settings["⚙️ Settings Storage"]
-        Notifications["🔔 Notification API"]
-    end
+ subgraph Browser[" Browser Environment"]
+ UI[" Popup UI"]
+ Settings["⚙ Settings Storage"]
+ Notifications[" Notification API"]
+ end
 
-    subgraph Background["⏳ Background Processing"]
-        ServiceWorker["👷 Service Worker"]
-        Polling["🔄 Polling Engine"]
-        Checker["🔍 Availability Checker"]
-    end
+ subgraph Background["⏳ Background Processing"]
+ ServiceWorker[" Service Worker"]
+ Polling[" Polling Engine"]
+ Checker[" Availability Checker"]
+ end
 
-    subgraph Target["🏸 Target Website"]
-        YokohamaFacility["Yokohama Public Facilities"]
-    end
+ subgraph Target[" Target Website"]
+ YokohamaFacility["Yokohama Public Facilities"]
+ end
 
-    UI -->|Save Settings| Settings
-    ServiceWorker -->|Read| Settings
-    Polling -->|Check Every 15/30/60min| Checker
-    Checker -->|Query| YokohamaFacility
-    Checker -->|Available| Notifications
-    Notifications -->|Alert User| Browser
+ UI -->|Save Settings| Settings
+ ServiceWorker -->|Read| Settings
+ Polling -->|Check Every 15/30/60min| Checker
+ Checker -->|Query| YokohamaFacility
+ Checker -->|Available| Notifications
+ Notifications -->|Alert User| Browser
 ```
 
 ---
@@ -106,6 +106,14 @@ cd badminton-yoyaku
 2. Enable "Developer mode" (top right)
 3. Click "Load unpacked"
 4. Select the `badminton-yoyaku` folder
+
+---
+
+## 📸 Screenshots
+
+| Search Conditions | Search Results | Settings |
+|:-----------------:|:--------------:|:--------:|
+| ![Search](capture/20260224173356.png) | ![Results](capture/20260224173401.png) | ![Settings](capture/20260224173403.png) |
 
 ---
 

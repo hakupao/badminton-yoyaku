@@ -56,28 +56,28 @@
 
 ```mermaid
 graph TB
-    subgraph Browser["🌐 浏览器环境"]
-        UI["🎨 Popup UI"]
-        Settings["⚙️ 设置存储"]
-        Notifications["🔔 通知 API"]
-    end
+ subgraph Browser[" 浏览器环境"]
+ UI[" Popup UI"]
+ Settings["⚙ 设置存储"]
+ Notifications[" 通知 API"]
+ end
 
-    subgraph Background["⏳ 后台处理"]
-        ServiceWorker["👷 Service Worker"]
-        Polling["🔄 轮询引擎"]
-        Checker["🔍 可用性检查器"]
-    end
+ subgraph Background["⏳ 后台处理"]
+ ServiceWorker[" Service Worker"]
+ Polling[" 轮询引擎"]
+ Checker[" 可用性检查器"]
+ end
 
-    subgraph Target["🏸 目标网站"]
-        YokohamaFacility["横滨公共体育馆网站"]
-    end
+ subgraph Target[" 目标网站"]
+ YokohamaFacility["横滨公共体育馆网站"]
+ end
 
-    UI -->|保存设置| Settings
-    ServiceWorker -->|读取| Settings
-    Polling -->|每 15/30/60 分钟检查| Checker
-    Checker -->|查询| YokohamaFacility
-    Checker -->|发现可用| Notifications
-    Notifications -->|提醒用户| Browser
+ UI -->|保存设置| Settings
+ ServiceWorker -->|读取| Settings
+ Polling -->|每 15/30/60 分钟检查| Checker
+ Checker -->|查询| YokohamaFacility
+ Checker -->|发现可用| Notifications
+ Notifications -->|提醒用户| Browser
 ```
 
 ---
