@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Badminton Yoyaku](https://readme-typing-svg.demolab.com?font=Fira+Code&pause=1000&color=EC4899&width=500&lines=🏸+badminton-yoyaku;Yokohama+Facility+Booking+Helper;Chrome+Extension+·+v1.1.0)
+![Badminton Yoyaku](https://readme-typing-svg.demolab.com?font=Fira+Code&pause=1000&color=EC4899&width=500&lines=%F0%9F%8F%B8+badminton-yoyaku;Yokohama+Facility+Booking+Helper;Chrome+Extension+%C2%B7+v1.1.0)
 
 </div>
 
